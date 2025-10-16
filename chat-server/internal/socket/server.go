@@ -26,7 +26,7 @@ type Socket struct {
 
 func NewSocket() *Socket {
 	return &Socket{
-		addr:      config.NodeSocket(),
+		addr:      config.AppSocket,
 		reuse:     true,
 		multicore: true,
 	}

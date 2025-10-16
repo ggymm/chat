@@ -31,29 +31,32 @@ func (l *SocketLogger) Fatalf(format string, args ...any) {
 }
 
 func newLog() *slog.Logger {
-	writer := io.MultiWriter(
-		&rolling.Logger{
-			Filename:   config.AppLog("socket"),
-			MaxAge:     30,  // days
-			MaxSize:    256, // megabytes
-			MaxBackups: 128, // files
-		},
-		io.MultiWriter(os.Stdout),
-	)
-	opt := &slog.HandlerOptions{
-		Level:     slog.LevelInfo,
-		AddSource: true,
-		ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
-			if attr.Key == slog.TimeKey {
-				if t, ok := attr.Value.Any().(time.Time); ok {
-					return slog.Attr{
-						Key:   attr.Key,
-						Value: slog.StringValue(t.Format("2006-01-02 15:04:05")),
+	name := config.Slog("socket")
+	handler := slog.NewTextHandler(
+		io.MultiWriter(
+			&rolling.Logger{
+				Filename:   name,
+				MaxAge:     30,  // days
+				MaxSize:    256, // megabytes
+				MaxBackups: 128, // files
+			},
+			io.MultiWriter(os.Stdout),
+		),
+		&slog.HandlerOptions{
+			Level:     slog.LevelInfo,
+			AddSource: true,
+			ReplaceAttr: func(groups []string, attr slog.Attr) slog.Attr {
+				if attr.Key == slog.TimeKey {
+					if t, ok := attr.Value.Any().(time.Time); ok {
+						return slog.Attr{
+							Key:   attr.Key,
+							Value: slog.StringValue(t.Format("2006-01-02 15:04:05")),
+						}
 					}
 				}
-			}
-			return attr
+				return attr
+			},
 		},
-	}
-	return slog.New(slog.NewTextHandler(writer, opt))
+	)
+	return slog.New(handler)
 }

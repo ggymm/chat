@@ -11,6 +11,18 @@ import (
 
 var G *Config
 
+var (
+	AppId     int64
+	AppMode   string
+	AppName   string
+	AppHttp   string
+	AppSocket string
+)
+
+var (
+	ClusterNodes []string
+)
+
 type Config struct {
 	root string
 
@@ -28,7 +40,8 @@ type Config struct {
 	}
 }
 
-func root() string {
+func Init() {
+	r := ""
 	exe, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -36,18 +49,13 @@ func root() string {
 	base := filepath.Base(exe)
 	if !strings.HasPrefix(exe, os.TempDir()) &&
 		!strings.HasPrefix(base, "___") {
-		return filepath.Dir(exe)
+		r = filepath.Dir(exe)
 	} else {
 		_, filename, _, ok := runtime.Caller(0)
 		if ok {
-			return filepath.Join(filepath.Dir(filename), "../")
+			r = filepath.Join(filepath.Dir(filename), "../")
 		}
 	}
-	return ""
-}
-
-func Init() {
-	r := root()
 	p := filepath.Join(r, "config.toml")
 
 	// 读取日志
@@ -61,4 +69,29 @@ func Init() {
 	}
 
 	G.root = r
+
+	// 简化读取
+	AppId = G.App.Id
+	AppMode = G.App.Mode
+	AppName = G.App.Name
+	AppHttp = G.App.Http
+	AppSocket = G.App.Socket
+}
+
+func Slog(t ...string) string {
+	name := G.App.Name
+	if len(t) > 0 {
+		name += "-" + t[0]
+	}
+	name += ".log"
+
+	// 判断类型
+	switch G.App.Mode {
+	case "debug":
+		return filepath.Join(G.root, "temp", name)
+	case "release":
+		return filepath.Join(G.root, "logs", name)
+	default:
+		return filepath.Join(G.root, "logs", name)
+	}
 }
