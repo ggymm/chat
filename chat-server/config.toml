@@ -1,0 +1,14 @@
+[app]
+id = 10001
+mode = "debug"
+#mode = "release"
+name = "chat-server"
+
+http = ":12346"
+socket = "tcp://:12345"
+
+[cluster]
+nodes = [
+    "10001@127.0.0.1:10001",
+    "20001@127.0.0.1:20001"
+]

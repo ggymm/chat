@@ -6,7 +6,9 @@ import (
 	"syscall"
 	"time"
 
-	"chat-server/internal/server"
+	"chat-server/internal/app"
+	"chat-server/internal/http"
+	"chat-server/internal/socket"
 )
 
 func main() {
@@ -15,10 +17,17 @@ func main() {
 	signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	// 初始化
+	app.Init()
 
 	// 启动服务
 	go func() {
-		err := server.NewServer().Start()
+		err := http.NewHttp().Start()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	go func() {
+		err := socket.NewSocket().Start()
 		if err != nil {
 			panic(err)
 		}

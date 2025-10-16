@@ -1,6 +1,7 @@
-package server
+package socket
 
 import (
+	"chat-server/config"
 	"io"
 	"log/slog"
 	"os"
@@ -32,7 +33,7 @@ func (l *SocketLogger) Fatalf(format string, args ...any) {
 func newLog() *slog.Logger {
 	writer := io.MultiWriter(
 		&rolling.Logger{
-			Filename:   "filename",
+			Filename:   config.AppLog("socket"),
 			MaxAge:     30,  // days
 			MaxSize:    256, // megabytes
 			MaxBackups: 128, // files

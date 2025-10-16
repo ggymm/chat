@@ -1,4 +1,4 @@
-package server
+package socket
 
 import (
 	"errors"
@@ -7,26 +7,32 @@ import (
 
 	"github.com/ggymm/gnet"
 	"github.com/panjf2000/ants/v2"
+
+	"chat-server/config"
 )
 
-type Server struct {
+type Socket struct {
 	gnet.BuiltinEventEngine
 	eng gnet.Engine
 
 	// 协程池
 	pool *ants.Pool
 
-	// 监听地址
+	// 服务配置
 	addr      string
 	reuse     bool
 	multicore bool
 }
 
-func NewServer() *Server {
-	return &Server{}
+func NewSocket() *Socket {
+	return &Socket{
+		addr:      config.NodeSocket(),
+		reuse:     true,
+		multicore: true,
+	}
 }
 
-func (s *Server) Start() error {
+func (s *Socket) Start() error {
 	return gnet.Run(
 		s, s.addr,
 		gnet.WithLogger(&SocketLogger{
@@ -37,14 +43,14 @@ func (s *Server) Start() error {
 	)
 }
 
-func (s *Server) OnBoot(eng gnet.Engine) (action gnet.Action) {
+func (s *Socket) OnBoot(eng gnet.Engine) (action gnet.Action) {
 	s.eng = eng
 
 	slog.Info("socket server started")
 	return
 }
 
-func (s *Server) OnOpen(c gnet.Conn) (out []byte, action gnet.Action) {
+func (s *Socket) OnOpen(c gnet.Conn) (out []byte, action gnet.Action) {
 	c.SetContext(&SocketCodec{})
 
 	slog.Info("socket client connected",
@@ -53,7 +59,7 @@ func (s *Server) OnOpen(c gnet.Conn) (out []byte, action gnet.Action) {
 	return
 }
 
-func (s *Server) OnTraffic(c gnet.Conn) (action gnet.Action) {
+func (s *Socket) OnTraffic(c gnet.Conn) (action gnet.Action) {
 	var codec = c.Context().(*SocketCodec)
 	var packets [][]byte
 	for {
